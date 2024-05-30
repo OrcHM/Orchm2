@@ -4,12 +4,12 @@ from email.mime.text import MIMEText
 
 app = Flask(__name__)
 
-# Configuración del servidor SMTP
+# Configuración del servidor SMTP con la contraseña de aplicación
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 SMTP_USERNAME = 'orchackermaster@gmail.com'
-SMTP_PASSWORD = 'bobbrdewhluttdnx'
-EMAIL_TO = 'orchackermaster@gmail.com'  # Tu dirección de correo
+APP_PASSWORD = 'bobbrdewhluttdnx'
+EMAIL_TO = 'orchackermaster@gmail.com'
 EMAIL_SUBJECT = 'Dirección IP registrada'
 
 def send_email(ip_address):
@@ -22,14 +22,17 @@ def send_email(ip_address):
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.login(SMTP_USERNAME, APP_PASSWORD)
             server.sendmail(SMTP_USERNAME, EMAIL_TO, msg.as_string())
     except Exception as e:
         print(f"Error al enviar el correo: {e}")
 
 @app.route('/track')
 def track():
-    ip_address = request.remote_addr
+    if request.headers.getlist("X-Forwarded-For"):
+        ip_address = request.headers.getlist("X-Forwarded-For")[0]
+    else:
+        ip_address = request.remote_addr
     send_email(ip_address)
     return "Tu IP ha sido registrada."
 
